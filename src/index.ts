@@ -5,7 +5,7 @@ export const name = 'imagify-skia'
 
 type Ground = {
   type: 'color',
-  color: string
+  color?: string
 } | {
   type: 'linearGradient',
   angle: number,
@@ -14,7 +14,7 @@ type Ground = {
   type: 'pattern',
   pattern: any
 } | {
-  type: ''
+  type?: ''
 }
 
 // type Ground = {
@@ -75,7 +75,7 @@ export const Config: Schema<Config> = Schema.object({
     Schema.union([
       Schema.object({
         type: Schema.const('color').required(),
-        color: Schema.string().description('color').default('white').required()
+        color: Schema.string().description('color').default('white')
       }),
       Schema.object({
         type: Schema.const('linearGradient').required(),
@@ -83,14 +83,15 @@ export const Config: Schema<Config> = Schema.object({
         colorStop: Schema.array(Schema.tuple([
           Schema.number().min(0).max(1).step(0.01).default(0).role('slider').description('offset'),
           Schema.string().description('color')
-        ]).description('[偏移量,颜色]')).required().description('是时候学习了 [CanvasGradient.addColorStop](https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasGradient/addColorStop)')
+        ]).description('[偏移量,颜色]')).description('是时候学习了 [CanvasGradient.addColorStop](https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasGradient/addColorStop)')
       }),
       Schema.object({
         type: Schema.const('pattern').required(),
         pattern: Schema.string().description('还没做好')
-      })
+      }),
+      Schema.object({})
     ])
-  ]).description('背景填充') as any,
+  ]).description('背景填充'),
   foreground: Schema.intersect([
     Schema.object({
       type: Schema.union<'color' | 'linearGradient' | 'pattern'>(['color', 'linearGradient'/* , 'pattern' */]).description('是时候学习了： [fillStyle](https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/fillStyle)'),
@@ -98,7 +99,7 @@ export const Config: Schema<Config> = Schema.object({
     Schema.union([
       Schema.object({
         type: Schema.const('color').required(),
-        color: Schema.string().description('color').default('black').required()
+        color: Schema.string().description('color').default('black')
       }),
       Schema.object({
         type: Schema.const('linearGradient').required(),
@@ -106,14 +107,15 @@ export const Config: Schema<Config> = Schema.object({
         colorStop: Schema.array(Schema.tuple([
           Schema.number().min(0).max(1).step(0.01).default(0).role('slider').description('offset'),
           Schema.string().description('color')
-        ]).description('[偏移量,颜色]')).required().description('是时候学习了 [CanvasGradient.addColorStop](https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasGradient/addColorStop)')
+        ]).description('[偏移量,颜色]')).description('是时候学习了 [CanvasGradient.addColorStop](https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasGradient/addColorStop)')
       }),
       Schema.object({
         type: Schema.const('pattern').required(),
         pattern: Schema.string().description('还没做好')
-      })
+      }),
+      Schema.object({})
     ])
-  ]).description('前景填充') as any,
+  ]).description('前景填充'),
 })
 
 export const using = []
@@ -146,22 +148,26 @@ export function apply(ctx: Context, config: Config) {
       //背景色
       ctx.save()
       if (config.background.type == 'color') {
-        ctx.fillStyle = config.background.color || 'white'
+        ctx.fillStyle = config.background.color
       } else if (config.background.type == 'linearGradient') {
         const cg = ctx.createLinearGradient(...calcGradual(config.background.angle, can))
         config.background.colorStop.forEach(e => cg.addColorStop(...e))
         ctx.fillStyle = cg
+      } else {
+        ctx.fillStyle = 'white'
       }
       ctx.fillRect(0, 0, can.width, can.height)
       ctx.restore()
 
       //前景色
       if (config.foreground.type == 'color') {
-        ctx.fillStyle = config.foreground.color || 'black'
+        ctx.fillStyle = config.foreground.color
       } else if (config.foreground.type == 'linearGradient') {
         const cg = ctx.createLinearGradient(...calcGradual(config.foreground.angle, can))
         config.foreground.colorStop.forEach(e => cg.addColorStop(...e))
         ctx.fillStyle = cg
+      } else {
+        ctx.fillStyle = 'black'
       }
 
       ctx.fillText(session.content, config.padding.left, config.padding.top, config.imageMaxWidth.auto ? undefined : config.imageMaxWidth.maxWidth)
