@@ -1,6 +1,5 @@
 import { Context, Schema, h, version } from 'koishi'
 import { Canvas } from 'skia-canvas'
-
 export const name = 'imagify-skia'
 
 type Ground = {
@@ -122,9 +121,10 @@ export const using = []
 
 export function apply(ctx: Context, config: Config) {
   ctx.before('send', (session) => {
-    let contentMapper = [session.content]
-    if (session.content.includes('\n')) {
-      contentMapper = session.content.split('\n')
+    const content = h.unescape(session.content)
+    let contentMapper = [content]
+    if (content.includes('\n')) {
+      contentMapper = content.split('\n')
     }
     if (h('', session.elements).toString(true).length > config.maxLength || contentMapper.length > config.maxLineCount) {
       const can = new Canvas()
@@ -136,7 +136,7 @@ export function apply(ctx: Context, config: Config) {
         ctx.font = `${config.fontSize}px${config.lineHeight ? `/${config.lineHeight}px` : ''} ${config.font}`
       }
       run()
-      const { width, lines } = ctx.measureText(session.content, config.imageMaxWidth.auto ? undefined : config.imageMaxWidth.maxWidth)
+      const { width, lines } = ctx.measureText(content, config.imageMaxWidth.auto ? undefined : config.imageMaxWidth.maxWidth)
 
       ctx.save()
       can.width = Math.max(width, config.imageMinWidth) + config.padding.left + config.padding.right
@@ -170,7 +170,7 @@ export function apply(ctx: Context, config: Config) {
         ctx.fillStyle = 'black'
       }
 
-      ctx.fillText(session.content, config.padding.left, config.padding.top, config.imageMaxWidth.auto ? undefined : config.imageMaxWidth.maxWidth)
+      ctx.fillText(content, config.padding.left, config.padding.top, config.imageMaxWidth.auto ? undefined : config.imageMaxWidth.maxWidth)
       session.elements = [h.image(can.toBufferSync('png'), 'image/png')]
     }
   })

@@ -1,7 +1,7 @@
 {
   "name": "@ltxhhz/koishi-plugin-imagify-skia",
   "description": "使用 skia-canvas 的图形化输出，性能优于 puppteer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
