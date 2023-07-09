@@ -1,6 +1,6 @@
 # koishi-plugin-imagify-skia
 
-[![npm](https://img.shields.io/npm/v/koishi-plugin-imagify-skia?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-imagify-skia)
+[![npm](https://img.shields.io/npm/v/@ltxhhz/koishi-plugin-imagify-skia?style=flat-square)](https://www.npmjs.com/package/@ltxhhz/koishi-plugin-imagify-skia)
 
 使用 skia-canvas 的图形化输出
 
