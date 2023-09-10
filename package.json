@@ -1,7 +1,7 @@
 {
   "name": "@ltxhhz/koishi-plugin-imagify-skia",
-  "description": "使用 skia-canvas 的图形化输出，性能优于 puppteer",
-  "version": "0.0.4",
+  "description": "使用 skia-canvas 的图形化输出，性能优于 puppeteer",
+  "version": "0.0.5",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -31,12 +31,17 @@
     "koishi": "^4.13.6"
   },
   "dependencies": {
-    "skia-canvas": "^1.0.1"
+    "@ltxhhz/koishi-plugin-skia-canvas": "^0.0.1"
   },
   "koishi": {
     "description": {
-      "en": "Graphical output using skia-canvas, with better performance than puppteer",
-      "zh": "使用 skia-canvas 的图形化输出，性能优于 puppteer"
+      "en": "Graphical output using skia-canvas, with better performance than puppeteer",
+      "zh": "使用 skia-canvas 的图形化输出，性能优于 puppeteer"
+    },
+    "service": {
+      "required": [
+        "skia"
+      ]
     },
     "locales": [
       "zh"
