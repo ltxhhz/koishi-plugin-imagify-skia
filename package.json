@@ -19,7 +19,6 @@
     "type": "git",
     "url": "git+https://github.com/ltxhhz/koishi-plugin-imagify-skia.git"
   },
-  "scripts": {},
   "keywords": [
     "skia",
     "canvas",
@@ -28,10 +27,11 @@
     "plugin"
   ],
   "peerDependencies": {
-    "koishi": "^4.13.6"
+    "koishi": "^4.15.2"
   },
   "dependencies": {
-    "@ltxhhz/koishi-plugin-skia-canvas": "^0.0.1"
+    "@ltxhhz/koishi-plugin-skia-canvas": "^0.0.3",
+    "lodash-es": "^4.17.21"
   },
   "koishi": {
     "description": {
