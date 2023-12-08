@@ -1,6 +1,6 @@
 import { Context, Logger, Schema, h } from 'koishi'
 import type { Canvas } from '@ltxhhz/koishi-plugin-skia-canvas'
-import { defaultsDeep } from 'lodash-es'
+import { defaultsDeep } from 'lodash'
 import assert from 'assert'
 
 export const name = 'imagify-skia'
