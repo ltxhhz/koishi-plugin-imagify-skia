@@ -225,6 +225,7 @@ export function apply(ctx: Context, cfg: Config) {
       //todo pattern 下次丕定
       //背景色
       ctx.save()
+      logger.debug(config)
       if (config.background.baseColor) {
         ctx.fillStyle = config.background.baseColor
         ctx.fillRect(0, 0, can.width, can.height)
@@ -268,39 +269,105 @@ export function apply(ctx: Context, cfg: Config) {
     }
   })
 }
-//todo 修改计算方式，以最短边为直径取点
-function calcLinearGradual(degree: number, canvas: Canvas): TupleOf<number, 4> {
+
+/**
+ * 计算canvas渐变起始坐标 
+ * @see [来源](https://blog.csdn.net/JJHuiQ/article/details/118308025)
+ */
+function calcLinearGradual(angle: number, canvas: Canvas): TupleOf<number, 4> {
   const { height, width } = canvas
-  const radian = (degree * Math.PI) / 180
-  const centerX = width / 2
-  const centerY = height / 2
-  // 计算角的延长线的斜率
-  const slope = Math.tan(radian)
-  if (degree > 0 && degree < 90) {
-    // 角的延长线与矩形的上边和右边相交
-    return [centerX + (height - centerY) / slope, height, width, centerY + slope * (width - centerX)]
-  } else if (degree > 90 && degree < 180) {
-    // 角的延长线与矩形的上边和左边相交
-    return [centerX - (height - centerY) / slope, height, 0, centerY - slope * centerX]
-  } else if (degree > 180 && degree < 270) {
-    // 角的延长线与矩形的下边和左边相交
-    return [centerX - centerY / slope, 0, 0, centerY + slope * centerX]
-  } else if (degree > 270 && degree < 360) {
-    // 角的延长线与矩形的下边和右边相交
-    return [centerX + centerY / slope, 0, width, centerY - slope * (width - centerX)]
-  } else if (degree == 0 || degree == 360) {
-    // 角的延长线与矩形的上边和下边相交
-    return [centerX, height, centerX, 0]
-  } else if (degree == 90) {
-    // 角的延长线与矩形的左边和右边相交
-    return [0, centerY, width, centerY]
-  } else if (degree == 180) {
-    // 角的延长线与矩形的上边和下边相交
-    return [centerX, height, centerX, 0]
-  } else if (degree == 270) {
-    // 角的延长线与矩形的左边和右边相交
-    return [0, centerY, width, centerY]
+  if (angle >= 360) angle = angle - 360
+  else if (angle < 0) angle = angle + 360
+  angle = Math.round(angle)
+
+  // 当渐变轴垂直于矩形水平边上的两种结果
+  if (angle === 0) {
+    return [Math.round(width / 2), height, Math.round(width / 2), 0]
   }
+  if (angle === 180) {
+    return [Math.round(width / 2), 0, Math.round(width / 2), height]
+  }
+
+  // 当渐变轴垂直于矩形垂直边上的两种结果
+  if (angle === 90) {
+    return [0, Math.round(height / 2), width, Math.round(height / 2)]
+  }
+  if (angle === 270) {
+    return [width, Math.round(height / 2), 0, Math.round(height / 2)]
+  }
+
+  // 从矩形左下角至右上角的对角线的角度
+  const alpha = Math.round((Math.asin(width / Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2))) * 180) / Math.PI)
+
+  // 当渐变轴分别于矩形的两条对角线重合情况下的四种结果
+  if (angle === alpha) {
+    return [0, height, width, 0]
+  }
+  if (angle === 180 - alpha) {
+    return [0, 0, width, height]
+  }
+  if (angle === 180 + alpha) {
+    return [width, 0, 0, height]
+  }
+  if (angle === 360 - alpha) {
+    return [width, height, 0, 0]
+  }
+
+  // 以矩形的中点为坐标原点，向上为Y轴正方向，向右为X轴正方向建立直角坐标系
+  let x0 = 0,
+    y0 = 0,
+    x1 = 0,
+    y1 = 0
+
+  // 当渐变轴与矩形的交点落在水平线上
+  if (
+    angle < alpha || // 处于第一象限
+    (angle > 180 - alpha && angle < 180) || // 处于第二象限
+    (angle > 180 && angle < 180 + alpha) || // 处于第三象限
+    angle > 360 - alpha // 处于第四象限
+  ) {
+    // 将角度乘以（PI/180）即可转换为弧度
+    const radian = (angle * Math.PI) / 180
+    // 当在第一或第四象限，y是height / 2，否则y是-height / 2
+    const y = angle < alpha || angle > 360 - alpha ? height / 2 : -height / 2
+    const x = Math.tan(radian) * y
+    // 当在第一或第二象限，l是width / 2 - x，否则l是-width / 2 - x
+    const l = angle < alpha || (angle > 180 - alpha && angle < 180) ? width / 2 - x : -width / 2 - x
+    const n = Math.pow(Math.sin(radian), 2) * l
+    x1 = x + n
+    y1 = y + n / Math.tan(radian)
+    x0 = -x1
+    y0 = -y1
+  }
+
+  // 当渐变轴与矩形的交点落在垂直线上
+  if (
+    (angle > alpha && angle < 90) || // 处于第一象限
+    (angle > 90 && angle < 180 - alpha) || // 处于第二象限
+    (angle > 180 + alpha && angle < 270) || // 处于第三象限
+    (angle > 270 && angle < 360 - alpha) // 处于第四象限
+  ) {
+    // 将角度乘以（PI/180）即可转换为弧度
+    const radian = ((90 - angle) * Math.PI) / 180
+    // 当在第一或第二象限，x是width / 2，否则x是-width / 2
+    const x = (angle > alpha && angle < 90) || (angle > 90 && angle < 180 - alpha) ? width / 2 : -width / 2
+    const y = Math.tan(radian) * x
+    // 当在第一或第四象限，l是height / 2 - y，否则l是-height / 2 - y
+    const l = (angle > alpha && angle < 90) || (angle > 270 && angle < 360 - alpha) ? height / 2 - y : -height / 2 - y
+    const n = Math.pow(Math.sin(radian), 2) * l
+    x1 = x + n / Math.tan(radian)
+    y1 = y + n
+    x0 = -x1
+    y0 = -y1
+  }
+
+  // 坐标系更改为canvas标准，Y轴向下为正方向
+  x0 = Math.round(x0 + width / 2)
+  y0 = Math.round(height / 2 - y0)
+  x1 = Math.round(x1 + width / 2)
+  y1 = Math.round(height / 2 - y1)
+
+  return [x0, y0, x1, y1]
 }
 
 function calcRadialGradient(cfg: { type: 'radialGradient'; round0: [string, string]; r0: string; round1: [string, string]; r1: string; colorStop: [number, string][] }, canvas: Canvas): TupleOf<number, 6> {
